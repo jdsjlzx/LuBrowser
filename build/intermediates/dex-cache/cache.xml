@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        is-multidex="true"
+        jar="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/exploded-aar/com.android.support/animated-vector-drawable/24.0.0/jars/classes.jar"
+        jumboMode="true"
+        optimize="false"
+        revision="23.0.3"
+        sha1="e70f608219ed6b974644c333249ab2bb7b71de98">
+        <dex dex="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/transforms/dex/debug/folders/1000/10/com.android.support-animated-vector-drawable-24.0.0_652c582b8e7e641f52ae7273a1e617d95d32da25/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/incremental-runtime-classes/debug/instant-run.jar"
+        jumboMode="true"
+        optimize="false"
+        revision="23.0.3"
+        sha1="b076e18e24eeaae99bdd9719ba142e01d3f42c06">
+        <dex dex="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/transforms/dex/debug/folders/1000/10/instant-run_bbcc67a71fb7517c9ceabaa1b38e6aacdb04f178/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/exploded-aar/com.jakewharton/butterknife/8.2.1/jars/classes.jar"
+        jumboMode="true"
+        optimize="false"
+        revision="23.0.3"
+        sha1="ca5e58104f56f918f0fb3a5b1b371ab599ae56b2">
+        <dex dex="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/transforms/dex/debug/folders/1000/10/com.jakewharton-butterknife-8.2.1_21f03bcf0c8afc9136d355b76c6f38f94af6d830/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/exploded-aar/com.android.support/support-vector-drawable/24.0.0/jars/classes.jar"
+        jumboMode="true"
+        optimize="false"
+        revision="23.0.3"
+        sha1="3bd97cfefd783e9de1dd1c30574a6adb44b4409b">
+        <dex dex="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/transforms/dex/debug/folders/1000/10/com.android.support-support-vector-drawable-24.0.0_9e8bf823287d4fca4da56ca3598230e6387d0b3d/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/lizhixian/Documents/Android/studio_sdk/extras/android/m2repository/com/android/support/support-annotations/24.0.0/support-annotations-24.0.0.jar"
+        jumboMode="true"
+        optimize="false"
+        revision="23.0.3"
+        sha1="2943c74db6d4346ab8c6531adac91fa05c137c40">
+        <dex dex="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/transforms/dex/debug/folders/1000/10/support-annotations-24.0.0_480606fd38be46c174623c6ab084c5626aaffd8b/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/lizhixian/.gradle/caches/modules-2/files-2.1/com.jakewharton/butterknife-annotations/8.2.1/d6f54d76edfbe779a50a8636b10fd3f555d8f780/butterknife-annotations-8.2.1.jar"
+        jumboMode="true"
+        optimize="false"
+        revision="23.0.3"
+        sha1="d6f54d76edfbe779a50a8636b10fd3f555d8f780">
+        <dex dex="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/transforms/dex/debug/folders/1000/10/butterknife-annotations-8.2.1_d5863b18226086ba0c8f00802fb8614c20d58513/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/exploded-aar/com.android.support/support-v4/24.0.0/jars/classes.jar"
+        jumboMode="true"
+        optimize="false"
+        revision="23.0.3"
+        sha1="2f7e6e2dad1bccaf68a8820820adc6c0d5b96d37">
+        <dex dex="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/transforms/dex/debug/folders/1000/10/com.android.support-support-v4-24.0.0_e8e0b096668a3d5ad35fc38fbe3a4b6d2d30c3f6/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/lizhixian/Documents/Android/studio_sdk/extras/m2repository/com/android/support/constraint/constraint-layout-solver/1.0.0-alpha4/constraint-layout-solver-1.0.0-alpha4.jar"
+        jumboMode="true"
+        optimize="false"
+        revision="23.0.3"
+        sha1="a882fef6a6b9e3efbb0b6b001895a5fc7c35b391">
+        <dex dex="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/transforms/dex/debug/folders/1000/10/constraint-layout-solver-1.0.0-alpha4_f6c347d313c0d4868f342fab2a357bb3314fcd87/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/exploded-aar/com.android.support/support-v4/24.0.0/jars/libs/internal_impl-24.0.0.jar"
+        jumboMode="true"
+        optimize="false"
+        revision="23.0.3"
+        sha1="fcaf463e10e69c1923ccf1edeba3b4196d239e00">
+        <dex dex="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/transforms/dex/debug/folders/1000/10/internal_impl-24.0.0_3279c576d1dc841c81d3fa0f7c465acd276dc4f6/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/24.0.0/jars/classes.jar"
+        jumboMode="true"
+        optimize="false"
+        revision="23.0.3"
+        sha1="0874286cc2fd88d54fdf130e9d5372730da6de97">
+        <dex dex="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/transforms/dex/debug/folders/1000/10/com.android.support-appcompat-v7-24.0.0_2b6a183b81b8a413727bfbc2ea0b8398ba221668/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/incremental-classes/debug/instant-run-bootstrap.jar"
+        jumboMode="true"
+        optimize="false"
+        revision="23.0.3"
+        sha1="fa8de8a55d21de49b1af1251adf0805a04da191e">
+        <dex dex="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/transforms/dex/debug/folders/1000/10/instant-run-bootstrap_e3e1c873920d9f0dff7e0ad396277bf3eef3b49e/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/exploded-aar/com.android.support.constraint/constraint-layout/1.0.0-alpha4/jars/classes.jar"
+        jumboMode="true"
+        optimize="false"
+        revision="23.0.3"
+        sha1="affe29a90a2a709bfd2b8d6411aa99c05a2be96f">
+        <dex dex="/Users/lizhixian/Documents/AndroidStudioProjects/LuBrowser/app/build/intermediates/transforms/dex/debug/folders/1000/10/com.android.support.constraint-constraint-layout-1.0.0-alpha4_54ae5ed1742f2607e7fcbc3b371cfa2fd1940a35/classes.dex" />
+    </item>
+
+</items>
