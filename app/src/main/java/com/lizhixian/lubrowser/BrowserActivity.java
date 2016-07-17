@@ -159,6 +159,22 @@ public class BrowserActivity extends BaseActivity implements View.OnClickListene
     }
 
     private void initView() {
+
+        switcherPanel.setStatusListener(new SwitcherPanel.StatusListener() {
+            @Override
+            public void onFling() {}
+
+            @Override
+            public void onExpanded() {}
+
+            @Override
+            public void onCollapsed() {
+                inputBox.clearFocus();
+            }
+        });
+
+        initSwitcherView();
+
         searchBox.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -196,7 +212,10 @@ public class BrowserActivity extends BaseActivity implements View.OnClickListene
 
             @Override
             public boolean canSwipe() {
-                return false;
+                TLog.error("canSwipe switcherPanel.isKeyBoardShowing() = " + switcherPanel.isKeyBoardShowing());
+                SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(BrowserActivity.this);
+                boolean ob = sp.getBoolean(getString(R.string.sp_omnibox_control), true);
+                return !switcherPanel.isKeyBoardShowing() && ob;
             }
 
             @Override
@@ -209,7 +228,7 @@ public class BrowserActivity extends BaseActivity implements View.OnClickListene
 
             @Override
             public void onBound(boolean canSwitch, boolean left) {
-                TLog.error("canSwitch " + canSwitch + "  left= " + left);
+                TLog.error("onBound canSwitch " + canSwitch + "  left= " + left);
                 inputBox.setKeyListener(keyListener);
                 inputBox.setFocusable(true);
                 inputBox.setFocusableInTouchMode(true);
@@ -240,14 +259,46 @@ public class BrowserActivity extends BaseActivity implements View.OnClickListene
                     NinjaToast.show(BrowserActivity.this, R.string.toast_input_empty);
                     return true;
                 }
+
                 updateAlbum(query);
                 hideSoftInput(inputBox);
-
 
                 return false;
             }
         });
 
+    }
+
+    private void initSwitcherView() {
+
+        switcherSetting.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(BrowserActivity.this, SettingActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        switcherBookmarks.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                addAlbum(BrowserUnit.FLAG_BOOKMARKS);
+            }
+        });
+
+        switcherHistory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                addAlbum(BrowserUnit.FLAG_HISTORY);
+            }
+        });
+
+        switcherAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                addAlbum(BrowserUnit.FLAG_HOME);
+            }
+        });
     }
 
     private void initData() {
@@ -451,30 +502,44 @@ public class BrowserActivity extends BaseActivity implements View.OnClickListene
     private synchronized void addAlbum(int flag) {
         TLog.error("addAlbum flag = " + flag);
 
-        AlbumController controller = null;
-        switch (flag) {
-            case BrowserUnit.FLAG_HOME:
-                NinjaRelativeLayout layout = (NinjaRelativeLayout) getLayoutInflater().inflate(R.layout.home, null, false);
-                layout.setBrowserController(this);
-                layout.setFlag(BrowserUnit.FLAG_HOME);
-                layout.setAlbumCover(ViewUnit.capture(layout, dimen144dp, dimen108dp, false, Bitmap.Config.RGB_565));
-                layout.setAlbumTitle(getString(R.string.album_title_home));
-                controller = layout;
-                initHomeGrid(layout, true);
-                break;
+        final AlbumController controller;
 
-            default:
-                break;
+        if (flag == BrowserUnit.FLAG_HOME) {
+            NinjaRelativeLayout layout = (NinjaRelativeLayout) getLayoutInflater().inflate(R.layout.home, null, false);
+            layout.setBrowserController(this);
+            layout.setFlag(BrowserUnit.FLAG_HOME);
+            layout.setAlbumCover(ViewUnit.capture(layout, dimen144dp, dimen108dp, false, Bitmap.Config.RGB_565));
+            layout.setAlbumTitle(getString(R.string.album_title_home));
+            controller = layout;
+            initHomeGrid(layout, true);
+        } else {
+            return;
         }
 
-        if(null != controller) {
-            final View albumView = controller.getAlbumView();
-            albumView.setVisibility(View.INVISIBLE);
+        final View albumView = controller.getAlbumView();
+        albumView.setVisibility(View.INVISIBLE);
 
-            BrowserContainer.add(controller);
-            switcherContainer.addView(albumView, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        }
+        BrowserContainer.add(controller);
+        switcherContainer.addView(albumView, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 
+        Animation animation = AnimationUtils.loadAnimation(this, R.anim.album_slide_in_up);
+        animation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+            }
+
+            @Override
+            public void onAnimationStart(Animation animation) {
+                albumView.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                TLog.error("onAnimationEnd showAlbum");
+                showAlbum(controller, false, true, true);
+            }
+        });
+        albumView.startAnimation(animation);
 
     }
 
@@ -579,12 +644,42 @@ public class BrowserActivity extends BaseActivity implements View.OnClickListene
     }
 
     @Override
-    public void showAlbum(AlbumController controller, boolean anim, boolean expand, final boolean capture) {
+    public void showAlbum(AlbumController controller, boolean anim, final boolean expand, final boolean capture) {
         if (controller == null || controller == currentAlbumController) {
+            TLog.error("showAlbum switcherPanel.expanded()");
             switcherPanel.expanded();
             return;
         }
 
+        if (currentAlbumController != null && anim) {
+            currentAlbumController.deactivate();
+            final View rv = (View) currentAlbumController;
+            final View av = (View) controller;
+
+            Animation fadeOut = AnimationUtils.loadAnimation(this, R.anim.album_fade_out);
+            fadeOut.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationRepeat(Animation animation) {}
+
+                @Override
+                public void onAnimationEnd(Animation animation) {}
+
+                @Override
+                public void onAnimationStart(Animation animation) {
+                    contentFrame.removeAllViews();
+                    contentFrame.addView(av);
+                }
+            });
+            rv.startAnimation(fadeOut);
+        } else {
+            if (currentAlbumController != null) {
+                currentAlbumController.deactivate();
+            }
+            contentFrame.removeAllViews();
+            contentFrame.addView((View) controller);
+        }
+
+        TLog.error("showAlbum currentAlbumController 970");
         currentAlbumController = controller;
         currentAlbumController.activate();
 
@@ -592,6 +687,12 @@ public class BrowserActivity extends BaseActivity implements View.OnClickListene
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
+
+                if (expand) {
+                    TLog.error("run showAlbum switcherPanel.expanded()");
+                    switcherPanel.expanded();
+                }
+
                 if (capture) {
                     currentAlbumController.setAlbumCover(ViewUnit.capture((View)currentAlbumController,dimen144dp, dimen108dp, false, Bitmap.Config.RGB_565));
                 }
@@ -726,9 +827,36 @@ public class BrowserActivity extends BaseActivity implements View.OnClickListene
         }
 
         if (currentAlbumController instanceof NinjaWebView) {
+            TLog.error("updateAlbum NinjaWebView ");
             ((NinjaWebView) currentAlbumController).loadUrl(url);
             updateOmnibox();
 
+        } else if (currentAlbumController instanceof NinjaRelativeLayout) {
+            TLog.error("updateAlbum NinjaRelativeLayout ");
+
+            NinjaWebView webView = new NinjaWebView(this);
+            webView.setBrowserController(this);
+            webView.setFlag(BrowserUnit.FLAG_NINJA);
+            webView.setAlbumCover(ViewUnit.capture(webView, dimen144dp, dimen108dp, false, Bitmap.Config.RGB_565));
+            webView.setAlbumTitle(getString(R.string.album_untitled));
+            ViewUnit.bound(this, webView);
+
+            int index = switcherContainer.indexOfChild(currentAlbumController.getAlbumView());
+            currentAlbumController.deactivate();
+            switcherContainer.removeView(currentAlbumController.getAlbumView());
+            contentFrame.removeAllViews(); ///
+
+            switcherContainer.addView(webView.getAlbumView(), index, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+            contentFrame.addView(webView);
+            BrowserContainer.set(webView, index);
+            TLog.error("currentAlbumController 795");
+            currentAlbumController = webView;
+            webView.activate();
+
+            webView.loadUrl(url);
+            updateOmnibox();
+        } else {
+            NinjaToast.show(this, R.string.toast_load_error);
         }
 
     }
