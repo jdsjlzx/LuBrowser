@@ -1,8 +1,11 @@
 package com.lizhixian.lubrowser;
 
+import android.app.AlertDialog;
 import android.app.SearchManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -15,10 +18,13 @@ import android.text.TextWatcher;
 import android.text.method.KeyListener;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
+import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -26,25 +32,34 @@ import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.lizhixian.lubrowser.base.BaseActivity;
 import com.lizhixian.lubrowser.browser.AlbumController;
 import com.lizhixian.lubrowser.browser.BrowserContainer;
 import com.lizhixian.lubrowser.browser.BrowserController;
+import com.lizhixian.lubrowser.database.RecordAction;
+import com.lizhixian.lubrowser.dynamicgrid.DynamicGridView;
 import com.lizhixian.lubrowser.service.HolderService;
 import com.lizhixian.lubrowser.ui.SettingActivity;
 import com.lizhixian.lubrowser.unit.BrowserUnit;
 import com.lizhixian.lubrowser.unit.IntentUnit;
 import com.lizhixian.lubrowser.unit.ViewUnit;
 import com.lizhixian.lubrowser.util.TLog;
+import com.lizhixian.lubrowser.view.DialogAdapter;
+import com.lizhixian.lubrowser.view.GridAdapter;
+import com.lizhixian.lubrowser.view.GridItem;
 import com.lizhixian.lubrowser.view.NinjaRelativeLayout;
 import com.lizhixian.lubrowser.view.NinjaToast;
 import com.lizhixian.lubrowser.view.NinjaWebView;
 import com.lizhixian.lubrowser.view.SwipeToBoundListener;
 import com.lizhixian.lubrowser.view.SwitcherPanel;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import butterknife.BindDimen;
@@ -336,8 +351,189 @@ public class BrowserActivity extends BaseActivity implements View.OnClickListene
         }
     }
 
-    private synchronized void addAlbum(int flag) {
+    private void initHomeGrid(final NinjaRelativeLayout layout, boolean update) {
+        if (update) {
+            updateProgress(BrowserUnit.PROGRESS_MIN);
+        }
 
+        RecordAction action = new RecordAction(this);
+        action.open(false);
+        final List<GridItem> gridList = action.listGrid();
+        action.close();
+
+        DynamicGridView gridView = (DynamicGridView) layout.findViewById(R.id.home_grid);
+        TextView aboutBlank = (TextView) layout.findViewById(R.id.home_about_blank);
+        gridView.setEmptyView(aboutBlank);
+
+        final GridAdapter gridAdapter;
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            gridAdapter = new GridAdapter(this, gridList, 3);
+        } else {
+            gridAdapter = new GridAdapter(this, gridList, 2);
+        }
+        gridView.setAdapter(gridAdapter);
+        gridAdapter.notifyDataSetChanged();
+
+        /* Wait for gridAdapter.notifyDataSetChanged() */
+        if (update) {
+            gridView.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    layout.setAlbumCover(ViewUnit.capture(layout, dimen144dp, dimen108dp, false, Bitmap.Config.RGB_565));
+                    updateProgress(BrowserUnit.PROGRESS_MAX);
+                }
+            }, shortAnimTime);
+        }
+
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                updateAlbum(gridList.get(position).getURL());
+            }
+        });
+
+        gridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                showGridMenu(gridList.get(position));
+                return true;
+            }
+        });
+    }
+
+    private void showGridMenu(final GridItem gridItem) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(true);
+
+        FrameLayout layout = (FrameLayout) getLayoutInflater().inflate(R.layout.dialog_list, null, false);
+        builder.setView(layout);
+
+        final String[] array = getResources().getStringArray(R.array.list_menu);
+        final List<String> stringList = new ArrayList<>();
+        stringList.addAll(Arrays.asList(array));
+        stringList.remove(array[1]); // Copy link
+        stringList.remove(array[2]); // Share
+
+        ListView listView = (ListView) layout.findViewById(R.id.dialog_list);
+        DialogAdapter dialogAdapter = new DialogAdapter(this, R.layout.dialog_text_item, stringList);
+        listView.setAdapter(dialogAdapter);
+        dialogAdapter.notifyDataSetChanged();
+
+        final AlertDialog dialog = builder.create();
+        dialog.show();
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String s = stringList.get(position);
+                if (s.equals(array[0])) { // New tab
+                    addAlbum(getString(R.string.album_untitled), gridItem.getURL(), false, null);
+                    NinjaToast.show(BrowserActivity.this, R.string.toast_new_tab_successful);
+                } else if (s.equals(array[3])) { // Edit
+                    //showEditDialog(gridItem);
+                } else if (s.equals(array[4])) { // Delete
+                    RecordAction action = new RecordAction(BrowserActivity.this);
+                    action.open(true);
+                    action.deleteGridItem(gridItem);
+                    action.close();
+                    BrowserActivity.this.deleteFile(gridItem.getFilename());
+
+                    initHomeGrid((NinjaRelativeLayout) currentAlbumController, true);
+                    NinjaToast.show(BrowserActivity.this, R.string.toast_delete_successful);
+                }
+
+                dialog.hide();
+                dialog.dismiss();
+            }
+        });
+    }
+
+    private synchronized void addAlbum(int flag) {
+        TLog.error("addAlbum flag = " + flag);
+
+        AlbumController controller = null;
+        switch (flag) {
+            case BrowserUnit.FLAG_HOME:
+                NinjaRelativeLayout layout = (NinjaRelativeLayout) getLayoutInflater().inflate(R.layout.home, null, false);
+                layout.setBrowserController(this);
+                layout.setFlag(BrowserUnit.FLAG_HOME);
+                layout.setAlbumCover(ViewUnit.capture(layout, dimen144dp, dimen108dp, false, Bitmap.Config.RGB_565));
+                layout.setAlbumTitle(getString(R.string.album_title_home));
+                controller = layout;
+                initHomeGrid(layout, true);
+                break;
+
+            default:
+                break;
+        }
+
+        if(null != controller) {
+            final View albumView = controller.getAlbumView();
+            albumView.setVisibility(View.INVISIBLE);
+
+            BrowserContainer.add(controller);
+            switcherContainer.addView(albumView, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        }
+
+
+    }
+
+    private synchronized void addAlbum(String title, final String url, final boolean foreground, final Message resultMsg) {
+        final NinjaWebView webView = new NinjaWebView(this);
+        webView.setBrowserController(this);
+        webView.setFlag(BrowserUnit.FLAG_NINJA);
+        webView.setAlbumCover(ViewUnit.capture(webView, dimen144dp, dimen108dp, false, Bitmap.Config.RGB_565));
+        webView.setAlbumTitle(title);
+        ViewUnit.bound(this, webView);
+
+        final View albumView = webView.getAlbumView();
+        if (currentAlbumController != null && (currentAlbumController instanceof NinjaWebView) && resultMsg != null) {
+            int index = BrowserContainer.indexOf(currentAlbumController) + 1;
+            BrowserContainer.add(webView, index);
+            switcherContainer.addView(albumView, index, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT));
+        } else {
+            BrowserContainer.add(webView);
+            switcherContainer.addView(albumView, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        }
+
+        if (!foreground) {
+            ViewUnit.bound(this, webView);
+            webView.loadUrl(url);
+            webView.deactivate();
+
+            albumView.setVisibility(View.VISIBLE);
+            if (currentAlbumController != null) {
+                switcherScroller.smoothScrollTo(currentAlbumController.getAlbumView().getLeft(), 0);
+            }
+            return;
+        }
+
+        albumView.setVisibility(View.INVISIBLE);
+        Animation animation = AnimationUtils.loadAnimation(this, R.anim.album_slide_in_up);
+        animation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+            }
+
+            @Override
+            public void onAnimationStart(Animation animation) {
+                albumView.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                showAlbum(webView, false, true, false);
+
+                if (url != null && !url.isEmpty()) {
+                    webView.loadUrl(url);
+                } else if (resultMsg != null) {
+                    WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
+                    transport.setWebView(webView);
+                    resultMsg.sendToTarget();
+                }
+            }
+        });
+        albumView.startAnimation(animation);
     }
 
     private AlbumController nextAlbumController(boolean next) {
@@ -419,18 +615,70 @@ public class BrowserActivity extends BaseActivity implements View.OnClickListene
     }
 
     @Override
-    public void onCreateView(WebView view, Message resultMsg) {
+    public void onCreateView(WebView view, final Message resultMsg) {
+
+        if (resultMsg == null) {
+            return;
+        }
+        switcherPanel.collapsed();
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                addAlbum(getString(R.string.album_untitled), null, true, resultMsg);
+            }
+        }, shortAnimTime);
 
     }
 
     @Override
     public boolean onShowCustomView(View view, int requestedOrientation, WebChromeClient.CustomViewCallback callback) {
-        return false;
+        return onShowCustomView(view, callback);
     }
 
     @Override
     public boolean onShowCustomView(View view, WebChromeClient.CustomViewCallback callback) {
-        return false;
+        if (view == null) {
+            return false;
+        }
+        /*if (customView != null && callback != null) {
+            callback.onCustomViewHidden();
+            return false;
+        }
+
+        customView = view;
+        originalOrientation = getRequestedOrientation();
+
+        fullscreenHolder = new FullscreenHolder(this);
+        fullscreenHolder.addView(
+                customView,
+                new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.MATCH_PARENT
+                ));
+
+        FrameLayout decorView = (FrameLayout) getWindow().getDecorView();
+        decorView.addView(
+                fullscreenHolder,
+                new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.MATCH_PARENT
+                ));
+
+        customView.setKeepScreenOn(true);
+        ((View) currentAlbumController).setVisibility(View.GONE);
+        setCustomFullscreen(true);
+
+        if (view instanceof FrameLayout) {
+            if (((FrameLayout) view).getFocusedChild() instanceof VideoView) {
+                videoView = (VideoView) ((FrameLayout) view).getFocusedChild();
+                videoView.setOnErrorListener(new VideoCompletionListener());
+                videoView.setOnCompletionListener(new VideoCompletionListener());
+            }
+        }
+        customViewCallback = callback;*/
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE); // Auto landscape when video shows
+
+        return true;
     }
 
     @Override
