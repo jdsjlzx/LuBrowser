@@ -817,7 +817,9 @@ public class BrowserActivity extends BaseActivity implements View.OnClickListene
     }
 
     private synchronized void updateAlbum() {
-
+        if (currentAlbumController == null) {
+            return;
+        }
     }
 
     private synchronized void updateAlbum(String url) {
